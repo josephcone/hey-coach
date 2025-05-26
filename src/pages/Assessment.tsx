@@ -30,7 +30,7 @@ const TightWaves = () => (
 );
 
 const Assessment: React.FC = () => {
-  const [mode, setMode] = useState<'initial' | 'awaiting_wake_word' | 'listening' | 'speaking' | 'text'>('initial');
+  const [mode, setMode] = useState<'initial' | 'listening' | 'speaking' | 'text'>('initial');
   const [transcript, setTranscript] = useState<string[]>([]);
   const { currentUser } = useAuth();
   const navigate = useNavigate();
@@ -43,11 +43,7 @@ const Assessment: React.FC = () => {
   }, [currentUser, navigate]);
 
   useEffect(() => {
-    if (mode === 'awaiting_wake_word' && voiceTranscript.toLowerCase().includes('hey coach')) {
-      setMode('listening');
-      // Clear the wake word from the transcript
-      setTranscript([]);
-    } else if (mode === 'listening' && !isListening) {
+    if (mode === 'listening' && !isListening) {
       // User stopped speaking, process the full transcript
       const fullTranscript = voiceTranscript;
       console.log('Full transcript:', fullTranscript);
@@ -55,16 +51,17 @@ const Assessment: React.FC = () => {
       const assistantResponse = 'This is a simulated response from the assistant.';
       speakMessage(assistantResponse).then(() => {
         setMode('speaking');
-        // After speaking, return to awaiting wake word
+        // After speaking, return to listening
         setTimeout(() => {
-          setMode('awaiting_wake_word');
+          setMode('listening');
+          startListening();
         }, 1000);
       });
     }
-  }, [voiceTranscript, isListening, mode]);
+  }, [voiceTranscript, isListening, mode, startListening]);
 
   const handleMicClick = () => {
-    setMode('awaiting_wake_word');
+    setMode('listening');
     startListening();
   };
 
@@ -73,27 +70,19 @@ const Assessment: React.FC = () => {
     setMode('text');
   };
 
-  const handleStartSpeaking = () => {
-    setMode('speaking');
-  };
-
-  const handleStopSpeaking = () => {
-    setMode('listening');
-  };
-
   return (
     <div className="w-full h-screen flex items-center justify-center bg-white">
       <div
         className="relative mx-auto w-full h-full flex flex-col items-center justify-center"
         style={{
           aspectRatio: '9/16',
-          maxWidth: '562.5px', // 1000px height * 9/16
+          maxWidth: '562.5px',
           height: '100vh',
           background: 'white',
         }}
       >
         {/* X Button */}
-        {(mode === 'awaiting_wake_word' || mode === 'listening' || mode === 'speaking' || mode === 'text') && (
+        {(mode === 'listening' || mode === 'speaking' || mode === 'text') && (
           <button
             className="absolute z-10 transition-all"
             style={{ top: 40, right: 40, fontSize: '2.5rem', color: '#888', lineHeight: 1 }}
@@ -108,7 +97,7 @@ const Assessment: React.FC = () => {
         {mode === 'initial' && (
           <div className="flex flex-col items-center justify-center w-full h-full">
             <div className="text-4xl md:text-6xl font-extrabold text-black mb-16 text-center leading-tight">
-              Tap and say<br />"Hey Coach"
+              Tap to start
             </div>
             <button
               className="focus:outline-none"
@@ -134,22 +123,23 @@ const Assessment: React.FC = () => {
           </div>
         )}
 
-        {mode === 'awaiting_wake_word' && (
-          <div className="flex flex-col items-center justify-center w-full h-full">
-            <div style={{ width: 200, height: 200, borderRadius: '50%', overflow: 'hidden', marginBottom: '2rem', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <img
-                src="/loose-waves.png"
-                alt="Waiting for wake word"
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
-            </div>
-            <div className="mt-4 text-gray-500">Waiting for "Hey Coach"...</div>
-          </div>
-        )}
-
         {mode === 'listening' && (
           <div className="flex flex-col items-center justify-center w-full h-full">
-            <div style={{ width: 200, height: 200, borderRadius: '50%', overflow: 'hidden', marginBottom: '2rem', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div 
+              className="animate-pulse"
+              style={{ 
+                width: 200, 
+                height: 200, 
+                borderRadius: '50%', 
+                overflow: 'hidden', 
+                marginBottom: '2rem', 
+                background: '#fff', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                boxShadow: '0 0 20px rgba(0, 0, 0, 0.1)'
+              }}
+            >
               <img
                 src="/loose-waves.png"
                 alt="Listening waves"
@@ -162,7 +152,21 @@ const Assessment: React.FC = () => {
 
         {mode === 'speaking' && (
           <div className="flex flex-col items-center justify-center w-full h-full">
-            <div style={{ width: 200, height: 200, borderRadius: '50%', overflow: 'hidden', marginBottom: '2rem', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div 
+              className="animate-pulse"
+              style={{ 
+                width: 200, 
+                height: 200, 
+                borderRadius: '50%', 
+                overflow: 'hidden', 
+                marginBottom: '2rem', 
+                background: '#fff', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                boxShadow: '0 0 20px rgba(0, 0, 0, 0.1)'
+              }}
+            >
               <img
                 src="/tight-waves.png"
                 alt="Speaking waves"
