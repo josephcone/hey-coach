@@ -59,16 +59,30 @@ const Assessment: React.FC = () => {
 
       {/* Main Content */}
       {mode === 'initial' && (
-        <div className="flex flex-col items-center">
-          <div className="text-2xl font-bold text-black mb-8 text-center">
+        <div className="flex flex-col items-center justify-center w-full h-full">
+          <div className="text-4xl md:text-6xl font-extrabold text-black mb-16 text-center leading-tight">
             Tap and say<br />"Hey Coach"
           </div>
           <button
-            className="w-32 h-32 rounded-full bg-gray-800 flex items-center justify-center shadow-lg mb-2"
+            className="focus:outline-none"
             onClick={handleMicClick}
             aria-label="Start voice input"
+            style={{ background: 'none', border: 'none', padding: 0 }}
           >
-            {/* Static noise effect can be added later */}
+            <div
+              className="noise-dot"
+              style={{
+                width: '200px',
+                height: '200px',
+                display: 'block',
+                backgroundImage: 'url(/noise.png)',
+                backgroundSize: 'cover',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center',
+                position: 'relative',
+                borderRadius: '50%'
+              }}
+            />
           </button>
         </div>
       )}
