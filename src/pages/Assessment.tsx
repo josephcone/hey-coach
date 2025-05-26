@@ -85,7 +85,7 @@ const Assessment: React.FC = () => {
                   width: '200px',
                   height: '200px',
                   display: 'block',
-                  backgroundImage: 'url(https://hey-coach-seven.vercel.app/noise.png)',
+                  backgroundImage: 'url(./noise.png)',
                   backgroundSize: 'cover',
                   backgroundRepeat: 'no-repeat',
                   backgroundPosition: 'center',
@@ -115,7 +115,7 @@ const Assessment: React.FC = () => {
               }}
             >
               <img
-                src="https://hey-coach-seven.vercel.app/loose-waves.png"
+                src="./loose-waves.png"
                 alt="Listening waves"
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
@@ -142,7 +142,7 @@ const Assessment: React.FC = () => {
               }}
             >
               <img
-                src="https://hey-coach-seven.vercel.app/tight-waves.png"
+                src="./tight-waves.png"
                 alt="Speaking waves"
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />

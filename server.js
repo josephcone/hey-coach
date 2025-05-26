@@ -7,7 +7,13 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 3001;
 
-app.use(cors());
+// Configure CORS
+app.use(cors({
+  origin: ['https://hey-coach-seven.vercel.app', 'http://localhost:3000'],
+  methods: ['GET', 'POST'],
+  credentials: true
+}));
+
 app.use(express.json());
 
 // Serve static files from the React build directory
@@ -25,6 +31,11 @@ app.post('/api/tts', async (req, res) => {
       return res.status(400).json({ error: 'Text is required' });
     }
 
+    if (!process.env.OPENAI_API_KEY) {
+      console.error('OpenAI API key is not set');
+      return res.status(500).json({ error: 'Server configuration error' });
+    }
+
     const mp3 = await openai.audio.speech.create({
       model: "tts-1",
       voice: "alloy",
@@ -35,10 +46,14 @@ app.post('/api/tts', async (req, res) => {
     
     res.setHeader('Content-Type', 'audio/mpeg');
     res.setHeader('Content-Length', buffer.length);
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.send(buffer);
   } catch (error) {
     console.error('TTS API error:', error);
-    res.status(500).json({ error: 'Failed to generate speech' });
+    res.status(500).json({ 
+      error: 'Failed to generate speech',
+      details: error.message 
+    });
   }
 });
 
