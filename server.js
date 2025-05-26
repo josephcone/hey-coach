@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const OpenAI = require('openai');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -8,6 +9,9 @@ const port = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
+
+// Serve static files from the React build directory
+app.use(express.static(path.join(__dirname, 'build')));
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -36,6 +40,11 @@ app.post('/api/tts', async (req, res) => {
     console.error('TTS API error:', error);
     res.status(500).json({ error: 'Failed to generate speech' });
   }
+});
+
+// Handle React routing, return all requests to React app
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
 app.listen(port, () => {
