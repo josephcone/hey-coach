@@ -11,7 +11,7 @@ const Landing: React.FC = () => {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       if (result.user) {
-        navigate('/dashboard');
+        navigate('/assessment');
       }
     } catch (error) {
       console.error('Failed to authenticate with Google:', error);
