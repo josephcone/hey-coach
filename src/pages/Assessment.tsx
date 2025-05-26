@@ -31,7 +31,6 @@ const TightWaves = () => (
 
 const Assessment: React.FC = () => {
   const [mode, setMode] = useState<'initial' | 'listening' | 'speaking' | 'text'>('initial');
-  const [transcript, setTranscript] = useState<string[]>([]);
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const { startListening, stopListening, transcript: voiceTranscript, isListening } = useVoiceRecognition();
@@ -181,13 +180,7 @@ const Assessment: React.FC = () => {
           <div className="w-full max-w-md mx-auto mt-16">
             <div className="text-center text-2xl font-bold mb-4">Chat</div>
             <div className="bg-gray-100 rounded-lg p-4 min-h-[200px] mb-4">
-              {transcript.length === 0 ? (
-                <div className="text-gray-400">No conversation yet.</div>
-              ) : (
-                transcript.map((line, idx) => (
-                  <div key={idx} className="mb-2 text-black">{line}</div>
-                ))
-              )}
+              <div className="text-gray-400">No conversation yet.</div>
             </div>
           </div>
         )}

@@ -1,28 +1,19 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { useAuth } from './contexts/AuthContext'
-import PrivateRoute from './components/PrivateRoute'
-import Landing from './pages/Landing'
-import Assessment from './pages/Assessment'
+import { AuthProvider } from './contexts/AuthContext'
+import Login from './pages/Login'
+import Signup from './pages/Signup'
 import Dashboard from './pages/Dashboard'
-import Activity from './pages/Activity'
+import Assessment from './pages/Assessment'
+import PrivateRoute from './components/PrivateRoute'
 
 const App: React.FC = () => {
-  const { currentUser } = useAuth()
-
   return (
     <Router>
-      <div className="min-h-screen bg-gray-100">
+      <AuthProvider>
         <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route
-            path="/assessment"
-            element={
-              <PrivateRoute>
-                <Assessment />
-              </PrivateRoute>
-            }
-          />
+          <Route path="/" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
           <Route
             path="/dashboard"
             element={
@@ -32,15 +23,15 @@ const App: React.FC = () => {
             }
           />
           <Route
-            path="/activity"
+            path="/assessment"
             element={
               <PrivateRoute>
-                <Activity />
+                <Assessment />
               </PrivateRoute>
             }
           />
         </Routes>
-      </div>
+      </AuthProvider>
     </Router>
   )
 }
