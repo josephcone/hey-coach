@@ -4,11 +4,15 @@ export const createRealtimeConnection = async (onTranscript: (text: string) => v
     throw new Error('OpenAI API key not found');
   }
 
-  const ws = new WebSocket(`wss://api.openai.com/v1/audio/realtime?api_key=${apiKey}`);
+  const ws = new WebSocket('wss://api.openai.com/v1/audio/realtime');
 
   ws.onopen = () => {
     console.log('WebSocket connection established');
-    // No need to send auth message anymore
+    // Send authentication message
+    ws.send(JSON.stringify({
+      type: 'auth',
+      token: apiKey
+    }));
   };
 
   ws.onmessage = (event) => {
