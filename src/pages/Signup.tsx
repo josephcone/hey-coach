@@ -1,12 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '../config/firebase';
 
 const Signup: React.FC = () => {
   const navigate = useNavigate();
-  const { signup } = useAuth();
 
   const handleGoogleSignup = async () => {
     try {
