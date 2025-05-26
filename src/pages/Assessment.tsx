@@ -49,10 +49,10 @@ const Assessment: React.FC = () => {
       {/* X Button */}
       {(mode === 'listening' || mode === 'speaking' || mode === 'text') && (
         <button
-          className="absolute top-8 right-8 text-4xl text-gray-400 hover:text-black focus:outline-none z-10"
+          className="absolute z-10"
+          style={{ top: '40px', right: '40px', fontSize: '2.5rem', color: '#888', lineHeight: 1 }}
           onClick={handleXClick}
           aria-label="Close voice mode"
-          style={{ lineHeight: 1 }}
         >
           ×
         </button>
@@ -137,9 +137,14 @@ const Assessment: React.FC = () => {
         </div>
       )}
 
-      {/* Carrot menu (^) at the bottom center */}
-      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-10">
-        <span className="text-4xl text-gray-500 select-none">^</span>
+      {/* Carrot menu (V) at the bottom right, aligned with X */}
+      <div
+        className="absolute z-10 select-none"
+        style={{ bottom: '40px', right: '40px' }}
+      >
+        <span style={{ fontSize: '2.5rem', color: '#888', transform: 'rotate(180deg)', display: 'block' }}>
+          ^
+        </span>
       </div>
     </div>
   );
