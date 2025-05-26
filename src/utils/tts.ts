@@ -1,8 +1,10 @@
 import axios from 'axios';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+
 export const speakMessage = async (text: string): Promise<void> => {
   try {
-    const response = await axios.post('/api/tts', { text }, {
+    const response = await axios.post(`${API_URL}/api/tts`, { text }, {
       responseType: 'arraybuffer',
       headers: {
         'Content-Type': 'application/json',
