@@ -1,126 +1,120 @@
-import { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-export default function Assessment() {
-  const [isListening, setIsListening] = useState(false);
-  const [transcript, setTranscript] = useState('');
-  const [assessmentComplete, setAssessmentComplete] = useState(false);
+// SVGs for waves (static for now, can animate later)
+const WideWaves = () => (
+  <svg width="120" height="80" viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    {[0, 1, 2, 3, 4].map(i => (
+      <path
+        key={i}
+        d={`M10 ${20 + i * 10} Q60 ${10 + i * 10}, 110 ${20 + i * 10}`}
+        stroke="#222" strokeWidth="2" fill="none"
+      />
+    ))}
+  </svg>
+);
+
+const TightWaves = () => (
+  <svg width="120" height="80" viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    {[0, 1, 2, 3, 4, 5, 6].map(i => (
+      <path
+        key={i}
+        d={`M20 ${15 + i * 8} Q60 ${10 + i * 8}, 100 ${15 + i * 8}`}
+        stroke="#222" strokeWidth="1.5" fill="none"
+      />
+    ))}
+  </svg>
+);
+
+const Assessment: React.FC = () => {
+  const [mode, setMode] = useState<'initial' | 'listening' | 'speaking' | 'text'>('initial');
+  const [transcript, setTranscript] = useState<string[]>([]);
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!currentUser) {
       navigate('/');
     }
   }, [currentUser, navigate]);
 
-  const startListening = () => {
-    setIsListening(true);
-    // TODO: Implement voice recognition
-  };
-
-  const stopListening = () => {
-    setIsListening(false);
-    // TODO: Stop voice recognition
-  };
-
-  const handleAssessmentComplete = () => {
-    setAssessmentComplete(true);
-    // TODO: Save assessment data
-    navigate('/dashboard');
-  };
+  const handleMicClick = () => setMode('listening');
+  const handleXClick = () => setMode('text');
+  const handleStartSpeaking = () => setMode('speaking');
+  const handleStopSpeaking = () => setMode('listening');
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="text-center">
-          <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-            Let's Get to Know You
-          </h2>
-          <p className="mt-3 text-xl text-gray-500">
-            I'll ask you some questions to understand your goals and preferences
-          </p>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white relative">
+      {/* X Button */}
+      {(mode === 'listening' || mode === 'speaking' || mode === 'text') && (
+        <button
+          className="absolute top-4 right-4 text-2xl text-gray-400 hover:text-black focus:outline-none"
+          onClick={handleXClick}
+          aria-label="Close voice mode"
+        >
+          ×
+        </button>
+      )}
+
+      {/* Main Content */}
+      {mode === 'initial' && (
+        <div className="flex flex-col items-center">
+          <div className="text-2xl font-bold text-black mb-8 text-center">
+            Tap and say<br />"Hey Coach"
+          </div>
+          <button
+            className="w-32 h-32 rounded-full bg-gray-800 flex items-center justify-center shadow-lg mb-2"
+            onClick={handleMicClick}
+            aria-label="Start voice input"
+          >
+            {/* Static noise effect can be added later */}
+          </button>
         </div>
+      )}
 
-        <div className="mt-12">
-          <div className="bg-white shadow sm:rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <div className="space-y-6">
-                <div className="flex items-center justify-center">
-                  <button
-                    onClick={isListening ? stopListening : startListening}
-                    className={`inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white ${
-                      isListening
-                        ? 'bg-red-600 hover:bg-red-700'
-                        : 'bg-blue-600 hover:bg-blue-700'
-                    }`}
-                  >
-                    {isListening ? 'Stop Listening' : 'Start Assessment'}
-                  </button>
-                </div>
+      {mode === 'listening' && (
+        <div className="flex flex-col items-center">
+          <WideWaves />
+          <div className="mt-8 text-gray-500">Listening...</div>
+          <button
+            className="mt-8 px-6 py-2 bg-black text-white rounded-full"
+            onClick={handleStartSpeaking}
+          >
+            Simulate Speaking
+          </button>
+        </div>
+      )}
 
-                {isListening && (
-                  <div className="mt-4">
-                    <div className="relative">
-                      <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-gray-300" />
-                      </div>
-                      <div className="relative flex justify-center">
-                        <span className="px-2 bg-white text-sm text-gray-500">
-                          Listening...
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
+      {mode === 'speaking' && (
+        <div className="flex flex-col items-center">
+          <TightWaves />
+          <div className="mt-8 text-gray-500">Speaking...</div>
+          <button
+            className="mt-8 px-6 py-2 bg-black text-white rounded-full"
+            onClick={handleStopSpeaking}
+          >
+            Simulate Listening
+          </button>
+        </div>
+      )}
 
-                {transcript && (
-                  <div className="mt-4">
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <p className="text-gray-700">{transcript}</p>
-                    </div>
-                  </div>
-                )}
-
-                {assessmentComplete && (
-                  <div className="mt-4">
-                    <div className="rounded-md bg-green-50 p-4">
-                      <div className="flex">
-                        <div className="flex-shrink-0">
-                          <svg
-                            className="h-5 w-5 text-green-400"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </div>
-                        <div className="ml-3">
-                          <h3 className="text-sm font-medium text-green-800">
-                            Assessment Complete
-                          </h3>
-                          <div className="mt-2 text-sm text-green-700">
-                            <p>
-                              Thank you for sharing! Let's get started with your
-                              personalized plan.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+      {mode === 'text' && (
+        <div className="w-full max-w-md mx-auto mt-16">
+          <div className="text-center text-2xl font-bold mb-4">Chat</div>
+          <div className="bg-gray-100 rounded-lg p-4 min-h-[200px] mb-4">
+            {transcript.length === 0 ? (
+              <div className="text-gray-400">No conversation yet.</div>
+            ) : (
+              transcript.map((line, idx) => (
+                <div key={idx} className="mb-2 text-black">{line}</div>
+              ))
+            )}
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
-} 
+};
+
+export default Assessment; 
