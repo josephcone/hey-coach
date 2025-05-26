@@ -45,13 +45,14 @@ const Assessment: React.FC = () => {
   const handleStopSpeaking = () => setMode('listening');
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-white relative">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white relative" style={{ minHeight: '100vh' }}>
       {/* X Button */}
       {(mode === 'listening' || mode === 'speaking' || mode === 'text') && (
         <button
-          className="absolute top-4 right-4 text-2xl text-gray-400 hover:text-black focus:outline-none"
+          className="absolute top-8 right-8 text-4xl text-gray-400 hover:text-black focus:outline-none z-10"
           onClick={handleXClick}
           aria-label="Close voice mode"
+          style={{ lineHeight: 1 }}
         >
           ×
         </button>
@@ -88,9 +89,13 @@ const Assessment: React.FC = () => {
       )}
 
       {mode === 'listening' && (
-        <div className="flex flex-col items-center">
-          <WideWaves />
-          <div className="mt-8 text-gray-500">Listening...</div>
+        <div className="flex flex-col items-center justify-center w-full h-full">
+          <img
+            src="/loose-waves.png"
+            alt="Listening waves"
+            style={{ width: '200px', height: '200px', objectFit: 'contain', marginBottom: '2rem' }}
+          />
+          <div className="mt-4 text-gray-500">Listening...</div>
           <button
             className="mt-8 px-6 py-2 bg-black text-white rounded-full"
             onClick={handleStartSpeaking}
@@ -101,9 +106,13 @@ const Assessment: React.FC = () => {
       )}
 
       {mode === 'speaking' && (
-        <div className="flex flex-col items-center">
-          <TightWaves />
-          <div className="mt-8 text-gray-500">Speaking...</div>
+        <div className="flex flex-col items-center justify-center w-full h-full">
+          <img
+            src="/tight-waves.png"
+            alt="Speaking waves"
+            style={{ width: '200px', height: '200px', objectFit: 'contain', marginBottom: '2rem' }}
+          />
+          <div className="mt-4 text-gray-500">Speaking...</div>
           <button
             className="mt-8 px-6 py-2 bg-black text-white rounded-full"
             onClick={handleStopSpeaking}
@@ -127,6 +136,11 @@ const Assessment: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Carrot menu (^) at the bottom center */}
+      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-10">
+        <span className="text-4xl text-gray-500 select-none">^</span>
+      </div>
     </div>
   );
 };
