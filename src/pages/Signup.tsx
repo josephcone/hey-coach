@@ -17,7 +17,15 @@ const Signup: React.FC = () => {
 
   return (
     <div className="w-full h-screen flex items-center justify-center bg-white">
-      <div className="text-4xl font-bold">Signup</div>
+      <div className="flex flex-col items-center">
+        <div className="text-4xl font-bold mb-8">Signup</div>
+        <button
+          onClick={handleSignup}
+          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Signup with Test Account
+        </button>
+      </div>
     </div>
   );
 };

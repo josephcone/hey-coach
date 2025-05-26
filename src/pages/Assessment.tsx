@@ -4,31 +4,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useVoiceRecognition } from '../hooks/useVoiceRecognition';
 import { speakMessage } from '../utils/tts';
 
-// SVGs for waves (static for now, can animate later)
-const WideWaves = () => (
-  <svg width="120" height="80" viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-    {[0, 1, 2, 3, 4].map(i => (
-      <path
-        key={i}
-        d={`M10 ${20 + i * 10} Q60 ${10 + i * 10}, 110 ${20 + i * 10}`}
-        stroke="#222" strokeWidth="2" fill="none"
-      />
-    ))}
-  </svg>
-);
-
-const TightWaves = () => (
-  <svg width="120" height="80" viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-    {[0, 1, 2, 3, 4, 5, 6].map(i => (
-      <path
-        key={i}
-        d={`M20 ${15 + i * 8} Q60 ${10 + i * 8}, 100 ${15 + i * 8}`}
-        stroke="#222" strokeWidth="1.5" fill="none"
-      />
-    ))}
-  </svg>
-);
-
 const Assessment: React.FC = () => {
   const [mode, setMode] = useState<'initial' | 'listening' | 'speaking' | 'text'>('initial');
   const { currentUser } = useAuth();
