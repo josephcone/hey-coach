@@ -5,6 +5,8 @@ const openai = new OpenAI({
   dangerouslyAllowBrowser: true
 });
 
+const API_URL = process.env.REACT_APP_API_URL || 'https://hey-coach-seven.vercel.app';
+
 export async function speakMessage(text: string): Promise<void> {
   try {
     const response = await openai.audio.speech.create({
@@ -25,19 +27,12 @@ export async function speakMessage(text: string): Promise<void> {
 
 // Helper function to create a WebSocket connection to the Realtime API
 export function createRealtimeConnection(onMessage: (text: string) => void, onError: (error: string) => void): WebSocket {
-  if (!process.env.REACT_APP_OPENAI_API_KEY) {
-    throw new Error('OpenAI API key is not set');
-  }
-
-  const ws = new WebSocket('wss://api.openai.com/v1/audio/realtime');
+  // Use our server as a proxy
+  const wsUrl = API_URL.replace(/^http/, 'ws');
+  const ws = new WebSocket(`${wsUrl}/ws`);
 
   ws.onopen = () => {
     console.log('WebSocket connection opened');
-    // Send authentication
-    ws.send(JSON.stringify({
-      type: 'auth',
-      token: process.env.REACT_APP_OPENAI_API_KEY
-    }));
   };
 
   ws.onmessage = (event) => {

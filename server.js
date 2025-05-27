@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const OpenAI = require('openai');
 const path = require('path');
+const WebSocket = require('ws');
 require('dotenv').config();
 
 const app = express();
@@ -25,6 +26,60 @@ app.use(express.static(path.join(__dirname, 'build')));
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+});
+
+// Create WebSocket server
+const wss = new WebSocket.Server({ noServer: true });
+
+wss.on('connection', (ws) => {
+  console.log('Client connected to WebSocket server');
+
+  // Create connection to OpenAI
+  const openaiWs = new WebSocket('wss://api.openai.com/v1/audio/realtime');
+
+  openaiWs.on('open', () => {
+    console.log('Connected to OpenAI WebSocket');
+    // Send authentication
+    openaiWs.send(JSON.stringify({
+      type: 'auth',
+      token: process.env.OPENAI_API_KEY
+    }));
+  });
+
+  // Forward messages from client to OpenAI
+  ws.on('message', (data) => {
+    if (openaiWs.readyState === WebSocket.OPEN) {
+      openaiWs.send(data);
+    }
+  });
+
+  // Forward messages from OpenAI to client
+  openaiWs.on('message', (data) => {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(data);
+    }
+  });
+
+  // Handle errors
+  openaiWs.on('error', (error) => {
+    console.error('OpenAI WebSocket error:', error);
+    ws.send(JSON.stringify({ type: 'error', error: 'OpenAI connection error' }));
+  });
+
+  ws.on('error', (error) => {
+    console.error('Client WebSocket error:', error);
+  });
+
+  // Clean up on close
+  ws.on('close', () => {
+    console.log('Client disconnected');
+    openaiWs.close();
+  });
+
+  openaiWs.on('close', () => {
+    console.log('OpenAI connection closed');
+    ws.close();
+  });
 });
 
 app.post('/api/tts', async (req, res) => {
@@ -70,6 +125,13 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`Server running on port ${port}`);
+});
+
+// Handle WebSocket upgrade
+server.on('upgrade', (request, socket, head) => {
+  wss.handleUpgrade(request, socket, head, (ws) => {
+    wss.emit('connection', ws, request);
+  });
 }); 
