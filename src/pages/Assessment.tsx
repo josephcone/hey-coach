@@ -4,6 +4,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { useVoiceRecognition } from '../hooks/useVoiceRecognition';
 import { speakMessage } from '../utils/tts';
 
+// Import images
+import noiseImage from '../assets/noise.png';
+import looseWavesImage from '../assets/loose-waves.png';
+import tightWavesImage from '../assets/tight-waves.png';
+
 const Assessment: React.FC = () => {
   const [mode, setMode] = useState<'initial' | 'listening' | 'speaking' | 'text'>('initial');
   const { currentUser } = useAuth();
@@ -85,7 +90,7 @@ const Assessment: React.FC = () => {
                   width: '200px',
                   height: '200px',
                   display: 'block',
-                  backgroundImage: 'url(./noise.png)',
+                  backgroundImage: `url(${noiseImage})`,
                   backgroundSize: 'cover',
                   backgroundRepeat: 'no-repeat',
                   backgroundPosition: 'center',
@@ -115,7 +120,7 @@ const Assessment: React.FC = () => {
               }}
             >
               <img
-                src="./loose-waves.png"
+                src={looseWavesImage}
                 alt="Listening waves"
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
@@ -142,7 +147,7 @@ const Assessment: React.FC = () => {
               }}
             >
               <img
-                src="./tight-waves.png"
+                src={tightWavesImage}
                 alt="Speaking waves"
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
