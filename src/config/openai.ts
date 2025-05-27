@@ -19,14 +19,20 @@ export async function speakMessage(text: string): Promise<void> {
     await audio.play();
   } catch (error) {
     console.error('Error generating speech:', error);
+    throw error;
   }
 }
 
 // Helper function to create a WebSocket connection to the Realtime API
 export function createRealtimeConnection(onMessage: (text: string) => void, onError: (error: string) => void): WebSocket {
+  if (!process.env.REACT_APP_OPENAI_API_KEY) {
+    throw new Error('OpenAI API key is not set');
+  }
+
   const ws = new WebSocket('wss://api.openai.com/v1/audio/realtime');
 
   ws.onopen = () => {
+    console.log('WebSocket connection opened');
     // Send authentication
     ws.send(JSON.stringify({
       type: 'auth',
@@ -37,17 +43,29 @@ export function createRealtimeConnection(onMessage: (text: string) => void, onEr
   ws.onmessage = (event) => {
     try {
       const data = JSON.parse(event.data);
+      console.log('WebSocket message received:', data);
+      
       if (data.type === 'transcript') {
         onMessage(data.text);
+      } else if (data.type === 'error') {
+        onError(data.error || 'Unknown error from OpenAI API');
       }
     } catch (error) {
+      console.error('Failed to parse WebSocket message:', error);
       onError('Failed to parse WebSocket message');
     }
   };
 
   ws.onerror = (error) => {
-    onError('WebSocket error occurred');
     console.error('WebSocket error:', error);
+    onError('WebSocket error occurred');
+  };
+
+  ws.onclose = (event) => {
+    console.log('WebSocket connection closed:', event.code, event.reason);
+    if (event.code !== 1000) {
+      onError(`WebSocket connection closed: ${event.reason || 'Unknown reason'}`);
+    }
   };
 
   return ws;

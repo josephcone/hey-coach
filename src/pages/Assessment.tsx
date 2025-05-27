@@ -11,9 +11,16 @@ import tightWavesImage from '../assets/tight-waves.png';
 
 const Assessment: React.FC = () => {
   const [mode, setMode] = useState<'initial' | 'listening' | 'speaking' | 'text'>('initial');
+  const [error, setError] = useState<string | null>(null);
   const { currentUser } = useAuth();
   const navigate = useNavigate();
-  const { startListening, stopListening, transcript: voiceTranscript, isListening } = useVoiceRecognition();
+  const { startListening, stopListening, transcript: voiceTranscript, isListening } = useVoiceRecognition({
+    onError: (error) => {
+      console.error('Voice recognition error:', error);
+      setError(error);
+      setMode('initial');
+    }
+  });
 
   useEffect(() => {
     if (!currentUser) {
@@ -26,20 +33,34 @@ const Assessment: React.FC = () => {
       // User stopped speaking, process the full transcript
       const fullTranscript = voiceTranscript;
       console.log('Full transcript:', fullTranscript);
+      
+      if (!fullTranscript) {
+        setMode('initial');
+        return;
+      }
+
       // Simulate assistant response (replace with actual AI call later)
       const assistantResponse = 'This is a simulated response from the assistant.';
-      speakMessage(assistantResponse).then(() => {
-        setMode('speaking');
-        // After speaking, return to listening
-        setTimeout(() => {
-          setMode('listening');
-          startListening();
-        }, 1000);
-      });
+      
+      speakMessage(assistantResponse)
+        .then(() => {
+          setMode('speaking');
+          // After speaking, return to listening
+          setTimeout(() => {
+            setMode('listening');
+            startListening();
+          }, 1000);
+        })
+        .catch((err) => {
+          console.error('Error speaking message:', err);
+          setError('Failed to speak response. Please try again.');
+          setMode('initial');
+        });
     }
   }, [voiceTranscript, isListening, mode, startListening]);
 
   const handleMicClick = () => {
+    setError(null);
     setMode('listening');
     startListening();
   };
@@ -60,6 +81,19 @@ const Assessment: React.FC = () => {
           background: 'white',
         }}
       >
+        {/* Error Message */}
+        {error && (
+          <div className="absolute top-4 left-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <p>{error}</p>
+            <button 
+              className="absolute top-0 right-0 px-4 py-3"
+              onClick={() => setError(null)}
+            >
+              ×
+            </button>
+          </div>
+        )}
+
         {/* X Button */}
         {(mode === 'listening' || mode === 'speaking' || mode === 'text') && (
           <button
@@ -126,6 +160,11 @@ const Assessment: React.FC = () => {
               />
             </div>
             <div className="mt-4 text-gray-500">Listening...</div>
+            {voiceTranscript && (
+              <div className="mt-4 text-gray-700 max-w-md text-center">
+                {voiceTranscript}
+              </div>
+            )}
           </div>
         )}
 

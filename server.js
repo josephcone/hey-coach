@@ -10,9 +10,13 @@ const port = process.env.PORT || 3001;
 // Configure CORS
 app.use(cors({
   origin: ['https://hey-coach-seven.vercel.app', 'http://localhost:3000'],
-  methods: ['GET', 'POST'],
-  credentials: true
+  methods: ['GET', 'POST', 'OPTIONS'],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// Handle preflight requests
+app.options('*', cors());
 
 app.use(express.json());
 
@@ -36,6 +40,8 @@ app.post('/api/tts', async (req, res) => {
       return res.status(500).json({ error: 'Server configuration error' });
     }
 
+    console.log('Generating speech for text:', text);
+
     const mp3 = await openai.audio.speech.create({
       model: "tts-1",
       voice: "alloy",
@@ -47,6 +53,8 @@ app.post('/api/tts', async (req, res) => {
     res.setHeader('Content-Type', 'audio/mpeg');
     res.setHeader('Content-Length', buffer.length);
     res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     res.send(buffer);
   } catch (error) {
     console.error('TTS API error:', error);
