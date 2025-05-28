@@ -13,7 +13,9 @@ app.use(cors({
   origin: ['https://hey-coach-seven.vercel.app', 'http://localhost:3000'],
   methods: ['GET', 'POST', 'OPTIONS'],
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Type', 'Content-Length'],
+  maxAge: 86400 // 24 hours
 }));
 
 // Handle preflight requests
@@ -84,6 +86,12 @@ wss.on('connection', (ws) => {
 
 // Handle audio processing
 app.post('/api/process-audio', async (req, res) => {
+  // Set CORS headers for this specific route
+  res.setHeader('Access-Control-Allow-Origin', 'https://hey-coach-seven.vercel.app');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+
   try {
     const { audioData, sessionId } = req.body;
 
@@ -157,9 +165,10 @@ app.post('/api/tts', async (req, res) => {
     
     res.setHeader('Content-Type', 'audio/mpeg');
     res.setHeader('Content-Length', buffer.length);
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Origin', 'https://hey-coach-seven.vercel.app');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.send(buffer);
   } catch (error) {
     console.error('TTS API error:', error);
