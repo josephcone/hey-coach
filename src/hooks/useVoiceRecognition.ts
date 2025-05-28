@@ -10,54 +10,49 @@ export function useVoiceRecognition({ onTranscriptChange, onError }: UseVoiceRec
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const wsRef = useRef<WebSocket | null>(null);
+  const sessionIdRef = useRef<string>(`session-${Date.now()}`);
 
   const startListening = useCallback(async () => {
     try {
-      // Connect to our WebSocket server
-      const ws = new WebSocket(`${API_URL.replace(/^http/, 'ws')}/ws`);
-      wsRef.current = ws;
-
-      ws.onopen = () => {
-        console.log('WebSocket connection opened');
-      };
-
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data.type === 'transcript') {
-            setTranscript(data.text);
-            onTranscriptChange?.(data.text);
-          } else if (data.type === 'error') {
-            console.error('WebSocket error:', data.error);
-            onError?.(data.error);
-          }
-        } catch (error) {
-          console.error('Failed to parse WebSocket message:', error);
-          onError?.(error instanceof Error ? error.message : 'Failed to parse WebSocket message');
-        }
-      };
-
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        onError?.('WebSocket error occurred');
-      };
-
-      ws.onclose = (event) => {
-        console.log('WebSocket connection closed:', event.code, event.reason);
-        if (event.code !== 1000) {
-          onError?.(`WebSocket connection closed: ${event.reason || 'Unknown reason'}`);
-        }
-      };
-
-      // Start recording audio
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
 
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0 && ws.readyState === WebSocket.OPEN) {
-          ws.send(event.data);
+      mediaRecorder.ondataavailable = async (event) => {
+        if (event.data.size > 0) {
+          try {
+            // Convert audio data to base64
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+              const base64Audio = reader.result as string;
+              
+              // Send audio data to server
+              const response = await fetch(`${API_URL}/api/process-audio`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  audioData: base64Audio,
+                  sessionId: sessionIdRef.current
+                }),
+              });
+
+              if (!response.ok) {
+                throw new Error('Failed to process audio');
+              }
+
+              const data = await response.json();
+              if (data.text) {
+                setTranscript(data.text);
+                onTranscriptChange?.(data.text);
+              }
+            };
+            reader.readAsDataURL(event.data);
+          } catch (error) {
+            console.error('Error processing audio:', error);
+            onError?.(error instanceof Error ? error.message : 'Failed to process audio');
+          }
         }
       };
 
@@ -74,9 +69,6 @@ export function useVoiceRecognition({ onTranscriptChange, onError }: UseVoiceRec
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
       mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-    }
-    if (wsRef.current) {
-      wsRef.current.close();
     }
     setIsListening(false);
   }, []);

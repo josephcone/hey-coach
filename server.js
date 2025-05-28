@@ -19,7 +19,7 @@ app.use(cors({
 // Handle preflight requests
 app.options('*', cors());
 
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 
 // Serve static files from the React build directory
 app.use(express.static(path.join(__dirname, 'build')));
@@ -82,6 +82,56 @@ wss.on('connection', (ws) => {
   });
 });
 
+// Handle audio processing
+app.post('/api/process-audio', async (req, res) => {
+  try {
+    const { audioData, sessionId } = req.body;
+
+    if (!audioData || !sessionId) {
+      return res.status(400).json({ error: 'Audio data and session ID are required' });
+    }
+
+    // Convert base64 to buffer
+    const audioBuffer = Buffer.from(audioData.split(',')[1], 'base64');
+
+    // Create WebSocket connection to OpenAI
+    const ws = new WebSocket('wss://api.openai.com/v1/audio/realtime');
+
+    ws.on('open', () => {
+      console.log('Connected to OpenAI WebSocket');
+      // Send authentication
+      ws.send(JSON.stringify({
+        type: 'auth',
+        token: process.env.OPENAI_API_KEY
+      }));
+    });
+
+    ws.on('message', (data) => {
+      try {
+        const response = JSON.parse(data);
+        if (response.type === 'transcript') {
+          // Send transcript back to client
+          res.json({ text: response.text });
+        }
+      } catch (error) {
+        console.error('Error processing OpenAI response:', error);
+      }
+    });
+
+    ws.on('error', (error) => {
+      console.error('OpenAI WebSocket error:', error);
+      res.status(500).json({ error: 'OpenAI connection error' });
+    });
+
+    // Send audio data to OpenAI
+    ws.send(audioBuffer);
+
+  } catch (error) {
+    console.error('Error processing audio:', error);
+    res.status(500).json({ error: 'Failed to process audio' });
+  }
+});
+
 app.post('/api/tts', async (req, res) => {
   try {
     const { text } = req.body;
@@ -125,7 +175,7 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
-const server = app.listen(port, () => {
+const server = app.listen(port, '0.0.0.0', () => {
   console.log(`Server running on port ${port}`);
 });
 
