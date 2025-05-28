@@ -5,7 +5,7 @@ const openai = new OpenAI({
   dangerouslyAllowBrowser: true
 });
 
-const API_URL = process.env.REACT_APP_API_URL || 'https://hey-coach-seven.vercel.app';
+export const API_URL = process.env.REACT_APP_API_URL || 'https://hey-coach-seven.vercel.app';
 
 export async function speakMessage(text: string): Promise<void> {
   try {
