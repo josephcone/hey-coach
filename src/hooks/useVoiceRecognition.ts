@@ -10,44 +10,32 @@ export function useVoiceRecognition({ onTranscriptChange, onError }: UseVoiceRec
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const wsRef = useRef<WebSocket | null>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const sessionIdRef = useRef<string>(`session-${Date.now()}`);
 
   const startListening = useCallback(async () => {
     try {
-      // Connect to our WebSocket server
-      const ws = new WebSocket(`${API_URL.replace(/^http/, 'ws')}/ws`);
-      wsRef.current = ws;
+      // Start SSE connection
+      const eventSource = new EventSource(`${API_URL}/api/transcripts/${sessionIdRef.current}`);
+      eventSourceRef.current = eventSource;
 
-      ws.onopen = () => {
-        console.log('WebSocket connection opened');
-      };
-
-      ws.onmessage = (event) => {
+      eventSource.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          if (data.type === 'transcript') {
-            setTranscript(data.text);
-            onTranscriptChange?.(data.text);
-          } else if (data.type === 'error') {
-            console.error('WebSocket error:', data.error);
-            onError?.(data.error);
+          if (data.transcripts && data.transcripts.length > 0) {
+            const latestTranscript = data.transcripts[data.transcripts.length - 1];
+            setTranscript(latestTranscript);
+            onTranscriptChange?.(latestTranscript);
           }
         } catch (error) {
-          console.error('Failed to parse WebSocket message:', error);
-          onError?.(error instanceof Error ? error.message : 'Failed to parse WebSocket message');
+          console.error('Failed to parse SSE message:', error);
+          onError?.(error instanceof Error ? error.message : 'Failed to parse SSE message');
         }
       };
 
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        onError?.('WebSocket error occurred');
-      };
-
-      ws.onclose = (event) => {
-        console.log('WebSocket connection closed:', event.code, event.reason);
-        if (event.code !== 1000) {
-          onError?.(`WebSocket connection closed: ${event.reason || 'Unknown reason'}`);
-        }
+      eventSource.onerror = (error) => {
+        console.error('SSE error:', error);
+        onError?.('SSE connection error occurred');
       };
 
       // Start recording audio
@@ -55,9 +43,35 @@ export function useVoiceRecognition({ onTranscriptChange, onError }: UseVoiceRec
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
 
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0 && ws.readyState === WebSocket.OPEN) {
-          ws.send(event.data);
+      mediaRecorder.ondataavailable = async (event) => {
+        if (event.data.size > 0) {
+          try {
+            // Convert audio data to base64
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+              const base64Audio = reader.result as string;
+              
+              // Send audio data to server
+              const response = await fetch(`${API_URL}/api/process-audio`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  audioData: base64Audio,
+                  sessionId: sessionIdRef.current
+                }),
+              });
+
+              if (!response.ok) {
+                throw new Error('Failed to process audio');
+              }
+            };
+            reader.readAsDataURL(event.data);
+          } catch (error) {
+            console.error('Error processing audio:', error);
+            onError?.(error instanceof Error ? error.message : 'Failed to process audio');
+          }
         }
       };
 
@@ -75,8 +89,8 @@ export function useVoiceRecognition({ onTranscriptChange, onError }: UseVoiceRec
       mediaRecorderRef.current.stop();
       mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
     }
-    if (wsRef.current) {
-      wsRef.current.close();
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
     }
     setIsListening(false);
   }, []);
